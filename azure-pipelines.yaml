@@ -1,47 +1,28 @@
 trigger:
-- master
-
-resources:
-- repo: self
-
-variables:
-- name: stagedImage
-  value: 'anchorestaging.azurecr.io/simpleserver:$(Build.BuildId)'
-- name: productionImage
-  value: 'production/simpleserver:$(Build.BuildId)'
-
-  # Use a variable group to store the Anchore credentials
-- group: anchoreCredentials
-
+- dev
 
 stages:
-- stage: Build
-  # Same build stage as previously shown
-
-
-- stage: Security
-  displayName: Security scan stage
-  dependsOn: Build
+- stage: Staging
+  displayName: Build and push to staging registry
   jobs:
-  - job: Security
-    displayName: Security
-    pool:
-      vmImage: 'ubuntu-latest'
+  - job: Staging
+    displayName: Staging
     steps:
-    - script: python -m pip install --upgrade setuptools wheel anchorecli
-      displayName: Install Anchore CLI
-
-      # Use the variables from the anchoreCredentials variable group
     - script: |
-        export PATH=$PATH:/home/vsts/.local/bin
-        export ANCHORE_CLI_USER=$(anchore_user)
-        export ANCHORE_CLI_PASS=$(anchore_pass)
-        export ANCHORE_CLI_URL=$(anchore_url)
-        anchore-cli image add $(stagedImage) --dockerfile=Dockerfile
-        anchore-cli image wait $(stagedImage)
-        anchore-cli image vuln $(stagedImage) all
-        anchore-cli evaluate check $(stagedImage)
-      displayName: Anchore Security Scan
+        docker build -t localbuild/testimage:ci -f Dockerfile .
 
-- stage: Production
-  # Push the image to your production registry and deploy it however you want
+    - task: Anchore@0
+      inputs:
+        image: 'localbuild/testimage:ci'
+        customPolicyPath: '.anchore/policy.json'
+        dockerfile: Dockerfile
+        failBuild: true
+
+    - script: |
+        echo $(policyStatus)
+
+        echo $(billOfMaterials)
+        cat $(billOfMaterials)
+
+        echo $(vulnerabilities)
+        cat $(vulnerabilities)
