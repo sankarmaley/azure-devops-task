@@ -2,11 +2,11 @@ trigger:
 - dev
 
 stages:
-- stage: Anchore-scan
+- stage: Anchore scan
   displayName: Build and push to staging registry
   jobs:
-  - job: Anchore-scan
-    displayName: Anchore-scan
+  - job: Anchore scan
+    displayName: Anchore scan
     steps:
     - script: |
         docker build -t localbuild/testimage:ci -f Dockerfile .
