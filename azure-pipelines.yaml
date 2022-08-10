@@ -22,7 +22,7 @@ stages:
         echo $(policyStatus)
 
         echo $(billOfMaterials)
-        
+        cat $(billOfMaterials)
 
         echo $(vulnerabilities)
-        
+        cat $(vulnerabilities)
